@@ -4,6 +4,6 @@ version = "0.1.0"
 authors = ["Deepankar Agrawal <deepankar11093@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+winit = "0.22.0"
+reqwest = { version = "0.10", features = ["blocking"] }
