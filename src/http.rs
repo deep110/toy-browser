@@ -26,12 +26,12 @@ impl HttpClient {
             },
         }
     }
-}
 
-pub fn create_http_client() -> HttpClient {
-    HttpClient {
-        client: reqwest::blocking::Client::new(),
-        error_string: String::from("<html><body>Error</body></html>"),
-        file_prefix: "file://",
+    pub fn new() -> HttpClient {
+        HttpClient {
+            client: reqwest::blocking::Client::new(),
+            error_string: String::from("<html><body>Error</body></html>"),
+            file_prefix: "file://",
+        }
     }
 }

@@ -3,7 +3,7 @@ use std::fmt;
 
 type AttrMap = HashMap<String, String>;
 
-struct Node {
+pub struct Node {
     // data common to all nodes:
     children: Vec<Node>,
 
@@ -13,7 +13,7 @@ struct Node {
 
 impl fmt::Display for Node {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Node({})", self.node_type)?;
+        writeln!(f, "Node({})", self.node_type)?;
         for child in self.children.iter() {
             writeln!(f, "|-{}", child)?;
         }
@@ -21,10 +21,9 @@ impl fmt::Display for Node {
     }
 }
 
-enum NodeType {
+pub enum NodeType {
     Text(String),
     Element(ElementData),
-    Comment(String),
 }
 
 impl fmt::Display for NodeType {
@@ -34,37 +33,29 @@ impl fmt::Display for NodeType {
            NodeType::Element(element_data) => {
             write!(f, "{:?}", element_data)
            },
-           NodeType::Comment(text) => write!(f, "{}", text),
        }
     }
 }
 
 #[derive(Debug)]
-struct ElementData {
+pub struct ElementData {
     tag_name: String,
     attributes: AttrMap,
 }
 
-fn create_text(data: String) -> Node {
+pub fn create_text(data: String) -> Node {
     Node {
         children: Vec::new(),
         node_type: NodeType::Text(data),
     }
 }
 
-fn create_element(name: String, attrs: AttrMap, children: Vec<Node>) -> Node {
+pub fn create_element(name: String, attrs: AttrMap, children: Vec<Node>) -> Node {
     Node {
         children: children,
         node_type: NodeType::Element(ElementData {
             tag_name: name,
             attributes: attrs,
         }),
-    }
-}
-
-fn create_comment(data: String) -> Node {
-    Node {
-        children: Vec::new(),
-        node_type: NodeType::Comment(data),
     }
 }
