@@ -1,7 +1,7 @@
 mod dom;
 mod window;
 mod http;
-mod html;
+mod parser;
 
 pub const BROWSER_NAME: &str = "ToyBrowser";
 
@@ -13,6 +13,6 @@ fn main() {
     let a = client.get("file:///home/deepankar/test.html");
     println!("{}", a);
 
-    let dom_tree = html::parse(a);
+    let dom_tree = parser::html::parse(a);
     println!("{}", dom_tree);
 }
