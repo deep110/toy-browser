@@ -15,4 +15,8 @@ fn main() {
 
     let dom_tree = parser::html::parse(a);
     println!("{}", dom_tree);
+    
+    let stylesheet = parser::css::parse(dom::get_css_text(dom_tree));
+    println!("{:?}", stylesheet);
+
 }

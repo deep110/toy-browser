@@ -28,12 +28,10 @@ pub enum NodeType {
 
 impl fmt::Display for NodeType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-       match &*self {
-           NodeType::Text(text) => write!(f, "{}", text),
-           NodeType::Element(element_data) => {
-            write!(f, "{:?}", element_data)
-           },
-       }
+        match &*self {
+            NodeType::Text(text) => write!(f, "{}", text),
+            NodeType::Element(element_data) => write!(f, "{:?}", element_data),
+        }
     }
 }
 
@@ -57,5 +55,29 @@ pub fn create_element(name: String, attrs: AttrMap, children: Vec<Node>) -> Node
             tag_name: name,
             attributes: attrs,
         }),
+    }
+}
+
+pub fn get_css_text(dom_tree: Node) -> String {
+    let nodes = dom_tree.children;
+    // Find Element with style tag and get its first child
+    for node in nodes.iter() {
+        match &node.node_type {
+            NodeType::Text(_) => {}
+            NodeType::Element(el) => {
+                if el.tag_name == "style" {
+                    return get_node_text(&node.children[0]);
+                }
+            }
+        }
+    }
+
+    String::from("")
+}
+
+fn get_node_text(node: &Node) -> String {
+    match &node.node_type {
+        NodeType::Text(s) => return s.to_string(),
+        NodeType::Element(_) => return String::from(""),
     }
 }
