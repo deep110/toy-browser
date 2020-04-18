@@ -5,5 +5,5 @@ authors = ["Deepankar Agrawal <deepankar11093@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-winit = "0.22.0"
+glutin = "0.24"
 reqwest = { version = "0.10", features = ["blocking"] }
