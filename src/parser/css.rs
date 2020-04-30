@@ -1,4 +1,3 @@
-use super::colors;
 /// CSS parser
 ///
 /// Example CSS:
@@ -8,7 +7,19 @@ use super::colors;
 /// #answer { display: none; }
 ///
 /// Each rule has selectors and declarations applied to it
+use super::colors;
 use super::Parser;
+
+pub const COLOR_PROPERTIES: [&str; 8] = [
+    "background-color",
+    "border-color",
+    "'border-top-color",
+    "border-right-color",
+    "border-bottom-color",
+    "border-left-color",
+    "color",
+    "outline-color",
+];
 
 #[derive(Debug)]
 pub struct Stylesheet {
@@ -44,7 +55,7 @@ enum Value {
     Keyword(String),
     Length(f32, Unit),
     ColorValue(Color),
-    Number(f32),
+    // Number(f32),
 }
 
 #[derive(Debug)]
@@ -90,7 +101,7 @@ impl PartialEq for Color {
 /// Decides the order in which to apply css properties
 ///
 /// For example, id takes preference over class
-pub type Specificity = (usize, usize, usize);
+type Specificity = (usize, usize, usize);
 
 impl Selector {
     pub fn specificity(&self) -> Specificity {
@@ -165,9 +176,6 @@ fn parse_declarations(parser: &mut Parser) -> Vec<Declaration> {
             break; // end of declaration
         }
         declarations.push(parse_declaration(parser));
-        if parser.next_char() == ';' {
-            parser.consume_char();
-        }
     }
 
     assert_eq!('}', parser.consume_char()); // end of declaration
@@ -186,17 +194,17 @@ fn parse_simple_selector(parser: &mut Parser) -> SimpleSelector {
         match parser.next_char() {
             '#' => {
                 parser.consume_char();
-                selector.id = Some(parser.parse_identifier());
+                selector.id = Some(parse_identifier(parser));
             }
             '.' => {
                 parser.consume_char();
-                selector.class.push(parser.parse_identifier());
+                selector.class.push(parse_identifier(parser));
             }
             '*' => {
                 parser.consume_char();
             }
             c if valid_identifier_char(c) => {
-                selector.tag_name = Some(parser.parse_identifier());
+                selector.tag_name = Some(parse_identifier(parser));
             }
             _ => break, // mainly `,`
         }
@@ -205,13 +213,41 @@ fn parse_simple_selector(parser: &mut Parser) -> SimpleSelector {
 }
 
 fn parse_declaration(parser: &mut Parser) -> Declaration {
-    let dec = parser.consume_while(|c| c != ';');
-    println!("dec {}", dec);
+    parser.skip_whitespace();
+
+    let prop_name = parse_identifier(parser);
+    parser.skip_whitespace();
+    assert_eq!(':', parser.consume_char());
+
+    parser.skip_whitespace();
+    let prop_value = parse_property_value(
+        &prop_name,
+        parser
+            .consume_while(|c| c != ';')
+            .trim()
+            .to_ascii_lowercase(),
+    );
+    assert_eq!(';', parser.consume_char());
 
     Declaration {
-        name: String::from("width"),
-        value: Value::Keyword(String::from("inherit")),
+        name: prop_name,
+        value: prop_value,
     }
+}
+
+fn parse_property_value(property_name: &String, value_string: String) -> Value {
+    if COLOR_PROPERTIES.contains(&property_name.as_ref()) {
+        let maybe_color = colors::parse_color(value_string.as_ref());
+        match maybe_color {
+            Ok(c) => return Value::ColorValue(c),
+            _ => {}, // when color value is inherit, etc.
+        }
+    }
+    Value::Keyword(value_string)
+}
+
+fn parse_identifier(parser: &mut Parser) -> String {
+    parser.consume_while(valid_identifier_char)
 }
 
 fn valid_identifier_char(c: char) -> bool {

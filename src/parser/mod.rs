@@ -53,11 +53,4 @@ impl Parser {
             _ => false,
         })
     }
-
-    fn parse_identifier(&mut self) -> String {
-        self.consume_while(|c| match c {
-            'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '-' => true,
-            _ => false,
-        })
-    }
 }

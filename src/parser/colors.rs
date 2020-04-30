@@ -1,13 +1,14 @@
 use super::css::Color;
 use crate::{errors, Result};
 
-pub fn parse_color(color_string: String) -> Result<Color> {
-    let cs = color_string.as_str();
-    let mut color = cs.trim().replace(' ', "");
+/// Parsers color value to rgba value
+/// 
+/// Assumes input string will be trimmed and converted to lowercase
+pub fn parse_color(color_string: &str) -> Result<Color> {
+    let color = color_string.replace(' ', "");
     if color.is_empty() {
         return errors::parse_error("invalid color");
     }
-    color.make_ascii_lowercase();
 
     if color.starts_with("#") {
         return parse_hex(color.as_str());
@@ -26,23 +27,23 @@ pub fn parse_color(color_string: String) -> Result<Color> {
 #[test]
 fn test_parse_color() {
     assert_eq!(
-        parse_color(String::from("#ffffff")).unwrap(),
+        parse_color("#ffffff").unwrap(),
         Color::from(255, 255, 255, 255)
     );
     assert_eq!(
-        parse_color(String::from("#fff")).unwrap(),
+        parse_color("#fff").unwrap(),
         Color::from(255, 255, 255, 255)
     );
     assert_eq!(
-        parse_color(String::from("orange")).unwrap(),
+        parse_color("orange").unwrap(),
         Color::from(255, 165, 0, 255)
     );
     assert_eq!(
-        parse_color(String::from("rgb(45, 21, 100)")).unwrap(),
+        parse_color("rgb(45, 21, 100)").unwrap(),
         Color::from(45, 21, 100, 255)
     );
     assert_eq!(
-        parse_color(String::from("rgba(45, 21, 100, 0.1)")).unwrap(),
+        parse_color("rgba(45, 21, 100, 0.1)").unwrap(),
         Color::from(45, 21, 100, 25)
     );
 }
