@@ -2,70 +2,76 @@ use super::css::Color;
 use crate::{errors, Result};
 
 pub fn parse_color(color_string: String) -> Color {
+    let cs = color_string.as_str();
+    let mut string = cs.trim().replace(' ', "");
+    if string.is_empty() {
+        return Color::new();
+    }
+    string.make_ascii_lowercase();
+
     Color::new()
 }
 
-fn parse_hex(hex_string: String) -> Result<Color> {
+fn parse_hex(hex_string: &str) -> Result<Color> {
     let len = hex_string.len();
     if len == 4 {
-        let mut color = Color::new();
-        color.r = u8::from_str_radix(
-            format!("{}{}", &hex_string[1..2], &hex_string[1..2]).as_str(),
-            16,
-        )?;
-        color.g = u8::from_str_radix(
-            format!("{}{}", &hex_string[2..3], &hex_string[2..3]).as_str(),
-            16,
-        )?;
-        color.b = u8::from_str_radix(
-            format!("{}{}", &hex_string[3..], &hex_string[3..]).as_str(),
-            16,
-        )?;
-        return Ok(color);
+        let iv = u64::from_str_radix(&hex_string[1..], 16)?;
+        if !(iv <= 0xfff) {
+            return errors::parse_error("invalid hex color");
+        }
+
+        return Ok(Color {
+            r: (((iv & 0xf00) >> 4) | ((iv & 0xf00) >> 8)) as u8,
+            g: ((iv & 0xf0) | ((iv & 0xf0) >> 4)) as u8,
+            b: ((iv & 0xf) | ((iv & 0xf) << 4)) as u8,
+            a: 255,
+        });
     }
 
     if len >= 7 {
-        let mut color = Color::new();
-        color.r = u8::from_str_radix(&hex_string[1..3], 16)?;
-        color.g = u8::from_str_radix(&hex_string[3..5], 16)?;
-        color.b = u8::from_str_radix(&hex_string[5..7], 16)?;
+        let iv = u64::from_str_radix(&hex_string[1..7], 16)?;
+        if !(iv <= 0xffffff) {
+            return errors::parse_error("invalid hex color");
+        }
+        let mut color = Color {
+            r: ((iv & 0xff0000) >> 16) as u8,
+            g: ((iv & 0xff00) >> 8) as u8,
+            b: (iv & 0xff) as u8,
+            a: 255,
+        };
 
         if len == 9 {
             // also add alpha
             color.a = u8::from_str_radix(&hex_string[7..9], 16)?;
         }
-
         return Ok(color);
     }
-    return errors::parse_error("wrong color hex");
+    return errors::parse_error("invalid hex color");
 }
 
 #[test]
 fn test_parse_hex() {
     assert_eq!(
-        parse_hex(String::from("#ffffff")).unwrap(),
+        parse_hex("#ffffff").unwrap(),
         Color::from(255, 255, 255, 255)
     );
     assert_eq!(
-        parse_hex(String::from("#7fffd4")).unwrap(),
+        parse_hex("#7fffd4").unwrap(),
         Color::from(127, 255, 212, 255)
     );
     assert_eq!(
-        parse_hex(String::from("#daa520")).unwrap(),
+        parse_hex("#daa520").unwrap(),
         Color::from(218, 165, 32, 255)
     );
     assert_eq!(
-        parse_hex(String::from("#40e0d0a0")).unwrap(),
+        parse_hex("#40e0d0a0").unwrap(),
         Color::from(64, 224, 208, 160)
     );
-    assert_eq!(
-        parse_hex(String::from("#adf")).unwrap(),
-        Color::from(170, 221, 255, 255)
-    );
+    assert_eq!(parse_hex("#adf").unwrap(), Color::from(170, 221, 255, 255));
 }
 
-fn parse_color_name(color_name: String) -> Result<Color> {
-    match color_name.as_str() {
+fn parse_color_name(color_name: &str) -> Result<Color> {
+    match color_name {
         "black" => Ok(Color::from(0, 0, 0, 255)),
         "silver" => Ok(Color::from(192, 192, 192, 255)),
         "gray" => Ok(Color::from(128, 128, 128, 255)),
@@ -214,6 +220,7 @@ fn parse_color_name(color_name: String) -> Result<Color> {
         "whitesmoke" => Ok(Color::from(245, 245, 245, 255)),
         "yellowgreen" => Ok(Color::from(154, 205, 50, 255)),
         "rebeccapurple" => Ok(Color::from(102, 51, 153, 255)),
+        "transparent" => Ok(Color::from(0, 0, 0, 0)),
         _ => errors::parse_error("no matching color found"),
     }
 }
@@ -221,11 +228,11 @@ fn parse_color_name(color_name: String) -> Result<Color> {
 #[test]
 fn test_parse_color_name() {
     assert_eq!(
-        parse_color_name(String::from("blue")).unwrap(),
+        parse_color_name("blue").unwrap(),
         Color::from(0, 0, 255, 255)
     );
     assert_eq!(
-        parse_color_name(String::from("teal")).unwrap(),
+        parse_color_name("teal").unwrap(),
         Color::from(0, 128, 128, 255)
     );
 }
