@@ -8,6 +8,9 @@
 ///
 /// Each rule has selectors and declarations applied to it
 
+use super::Parser;
+use super::colors;
+
 #[derive(Debug)]
 pub struct Stylesheet {
     rules: Vec<Rule>,
@@ -47,20 +50,67 @@ enum Value {
 #[derive(Debug)]
 enum Unit {
     Px,
-    In,
-    Per,
 }
 
 #[derive(Debug)]
-struct Color {
-    r: u8,
-    g: u8,
-    b: u8,
-    a: u8,
+pub struct Color {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8,
+}
+
+impl Color {
+    pub fn new() -> Color {
+        Color{r: 0, g: 0, b: 0, a: 255}
+    }
+
+    pub fn from(r: u8, g: u8, b: u8, a: u8) -> Color {
+        Color{r: r, g: g, b: b, a: a}
+    }
+}
+
+impl PartialEq for Color {
+    fn eq(&self, other: &Self) -> bool {
+        self.r == other.r && self.b == other.b && self.g == other.g && self.a == other.a
+    }
 }
 
 pub fn parse(source: String) -> Stylesheet {
+    let mut parser = Parser {
+        pos: 0,
+        input: source,
+    };
     Stylesheet {
-        rules: Vec::new(),
+        rules: parse_rules(&mut parser),
     }
 }
+
+fn parse_rules(parser: &mut Parser) -> Vec<Rule> {
+    let mut rules = Vec::new();
+
+    loop {
+        parser.skip_whitespace();
+        if parser.eof() {
+            break;
+        }
+        rules.push(parse_rule(parser));
+    }
+
+    return rules;
+}
+
+fn parse_rule(parser: &mut Parser) -> Rule {
+    Rule {
+        selectors: Vec::new(),
+        declarations: Vec::new(),
+    }
+}
+
+// fn parse_simple_selector(parser: &mut Parser) -> Selector {
+    
+// }
+
+// fn parse_declaration(parser: &mut Parser) -> Declaration {
+    
+// }

@@ -1,5 +1,6 @@
 pub mod html;
 pub mod css;
+mod colors;
 
 use super::dom;
 

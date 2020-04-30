@@ -26,7 +26,7 @@ fn parse_nodes(parser: &mut Parser) -> Vec<dom::Node> {
         if parser.eof() || parser.starts_with("</") {
             break;
         }
-        nodes.push(parse_node(parser))
+        nodes.push(parse_node(parser));
     }
     return nodes;
 }
