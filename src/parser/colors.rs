@@ -1,15 +1,50 @@
 use super::css::Color;
 use crate::{errors, Result};
 
-pub fn parse_color(color_string: String) -> Color {
+pub fn parse_color(color_string: String) -> Result<Color> {
     let cs = color_string.as_str();
-    let mut string = cs.trim().replace(' ', "");
-    if string.is_empty() {
-        return Color::new();
+    let mut color = cs.trim().replace(' ', "");
+    if color.is_empty() {
+        return errors::parse_error("invalid color");
     }
-    string.make_ascii_lowercase();
+    color.make_ascii_lowercase();
 
-    Color::new()
+    if color.starts_with("#") {
+        return parse_hex(color.as_str());
+    }
+    if color.starts_with("rgba") {
+        return parse_rgba(color.as_str());
+    }
+    if color.starts_with("rgb") {
+        return parse_rgb(color.as_str());
+    }
+    // TODO: parse hsl & hsla
+
+    return parse_color_name(color.as_str());
+}
+
+#[test]
+fn test_parse_color() {
+    assert_eq!(
+        parse_color(String::from("#ffffff")).unwrap(),
+        Color::from(255, 255, 255, 255)
+    );
+    assert_eq!(
+        parse_color(String::from("#fff")).unwrap(),
+        Color::from(255, 255, 255, 255)
+    );
+    assert_eq!(
+        parse_color(String::from("orange")).unwrap(),
+        Color::from(255, 165, 0, 255)
+    );
+    assert_eq!(
+        parse_color(String::from("rgb(45, 21, 100)")).unwrap(),
+        Color::from(45, 21, 100, 255)
+    );
+    assert_eq!(
+        parse_color(String::from("rgba(45, 21, 100, 0.1)")).unwrap(),
+        Color::from(45, 21, 100, 25)
+    );
 }
 
 fn parse_hex(hex_string: &str) -> Result<Color> {
@@ -70,8 +105,8 @@ fn test_parse_hex() {
     assert_eq!(parse_hex("#adf").unwrap(), Color::from(170, 221, 255, 255));
 }
 
-fn parse_color_name(color_name: &str) -> Result<Color> {
-    match color_name {
+fn parse_color_name(color: &str) -> Result<Color> {
+    match color {
         "black" => Ok(Color::from(0, 0, 0, 255)),
         "silver" => Ok(Color::from(192, 192, 192, 255)),
         "gray" => Ok(Color::from(128, 128, 128, 255)),
@@ -234,5 +269,57 @@ fn test_parse_color_name() {
     assert_eq!(
         parse_color_name("teal").unwrap(),
         Color::from(0, 128, 128, 255)
+    );
+}
+
+fn parse_rgb(color: &str) -> Result<Color> {
+    let le = color.len() - 1;
+    let ss: Vec<&str> = color[4..le].split(",").collect();
+    if ss.len() != 3 {
+        return errors::parse_error("invalid rgb value");
+    }
+    Ok(Color::from(
+        ss[0].parse::<u8>()?,
+        ss[1].parse::<u8>()?,
+        ss[2].parse::<u8>()?,
+        255,
+    ))
+}
+
+#[test]
+fn test_parse_rgb() {
+    assert_eq!(
+        parse_rgb("rgb(20,30,100)").unwrap(),
+        Color::from(20, 30, 100, 255)
+    );
+    assert_eq!(
+        parse_rgb("rgb(120,255,0)").unwrap(),
+        Color::from(120, 255, 0, 255)
+    );
+}
+
+fn parse_rgba(color: &str) -> Result<Color> {
+    let le = color.len() - 1;
+    let ss: Vec<&str> = color[5..le].split(",").collect();
+    if ss.len() != 4 {
+        return errors::parse_error("invalid rgba value");
+    }
+    Ok(Color::from(
+        ss[0].parse::<u8>()?,
+        ss[1].parse::<u8>()?,
+        ss[2].parse::<u8>()?,
+        (ss[3].parse::<f32>()? * 255.0) as u8,
+    ))
+}
+
+#[test]
+fn test_parse_rgba() {
+    assert_eq!(
+        parse_rgba("rgba(20,30,100,0.1)").unwrap(),
+        Color::from(20, 30, 100, 25)
+    );
+    assert_eq!(
+        parse_rgba("rgba(120,255,0,0.5)").unwrap(),
+        Color::from(120, 255, 0, 127)
     );
 }

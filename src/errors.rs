@@ -30,8 +30,14 @@ impl std::error::Error for Error {
 }
 
 impl From<std::num::ParseIntError> for Error {
-    fn from(err: std::num::ParseIntError) -> Self {
-        Error::ParseError("unable to parse color hex")
+    fn from(_: std::num::ParseIntError) -> Self {
+        Error::ParseError("unable to parse color")
+    }
+}
+
+impl From<std::num::ParseFloatError> for Error {
+    fn from(_: std::num::ParseFloatError) -> Self {
+        Error::ParseError("unable to parse color")
     }
 }
 
