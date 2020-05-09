@@ -13,7 +13,7 @@ use super::Parser;
 pub const COLOR_PROPERTIES: [&str; 8] = [
     "background-color",
     "border-color",
-    "'border-top-color",
+    "border-top-color",
     "border-right-color",
     "border-bottom-color",
     "border-left-color",
@@ -21,50 +21,65 @@ pub const COLOR_PROPERTIES: [&str; 8] = [
     "outline-color",
 ];
 
+/// Decides the order in which to apply css properties
+///
+/// For example, id takes preference over class
+pub type Specificity = (usize, usize, usize);
+
 #[derive(Debug)]
 pub struct Stylesheet {
-    rules: Vec<Rule>,
+    pub rules: Vec<Rule>,
 }
 
 #[derive(Debug)]
-struct Rule {
-    selectors: Vec<Selector>,       // h1, h2, h3
-    declarations: Vec<Declaration>, // { margin: auto; color: #cc0000; }
+pub struct Rule {
+    pub selectors: Vec<Selector>,       // h1, h2, h3
+    pub declarations: Vec<Declaration>, // { margin: auto; color: #cc0000; }
 }
 
 #[derive(Debug)]
-enum Selector {
+pub enum Selector {
     Simple(SimpleSelector),
 }
 
-#[derive(Debug)]
-struct SimpleSelector {
-    tag_name: Option<String>,
-    id: Option<String>,
-    class: Vec<String>,
+impl Selector {
+    pub fn specificity(&self) -> Specificity {
+        let Selector::Simple(ref simple) = *self;
+        let a = simple.id.iter().count();
+        let b = simple.class.len();
+        let c = simple.tag_name.iter().count();
+        (a, b, c)
+    }
 }
 
 #[derive(Debug)]
-struct Declaration {
-    name: String,
-    value: Value,
+pub struct SimpleSelector {
+    pub tag_name: Option<String>,
+    pub id: Option<String>,
+    pub class: Vec<String>,
 }
 
-#[derive(Debug)]
-enum Value {
+#[derive(Debug, Clone)]
+pub struct Declaration {
+    pub name: String,
+    pub value: Value,
+}
+
+#[derive(Debug, Clone)]
+pub enum Value {
     Keyword(String),
     Length(f32, Unit),
     ColorValue(Color),
     // Number(f32),
 }
 
-#[derive(Debug)]
-enum Unit {
+#[derive(Debug, Clone)]
+pub enum Unit {
     Px,
     Em,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Color {
     pub r: u8,
     pub g: u8,
@@ -73,15 +88,6 @@ pub struct Color {
 }
 
 impl Color {
-    pub fn new() -> Color {
-        Color {
-            r: 0,
-            g: 0,
-            b: 0,
-            a: 255,
-        }
-    }
-
     pub fn from(r: u8, g: u8, b: u8, a: u8) -> Color {
         Color {
             r: r,
@@ -98,20 +104,6 @@ impl PartialEq for Color {
     }
 }
 
-/// Decides the order in which to apply css properties
-///
-/// For example, id takes preference over class
-type Specificity = (usize, usize, usize);
-
-impl Selector {
-    pub fn specificity(&self) -> Specificity {
-        let Selector::Simple(ref simple) = *self;
-        let a = simple.id.iter().count();
-        let b = simple.class.len();
-        let c = simple.tag_name.iter().count();
-        (a, b, c)
-    }
-}
 
 pub fn parse(source: String) -> Stylesheet {
     let mut parser = Parser {

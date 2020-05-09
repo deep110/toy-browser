@@ -1,8 +1,9 @@
 mod dom;
-mod window;
+mod errors;
 mod http;
 mod parser;
-mod errors;
+mod style;
+mod window;
 
 pub const BROWSER_NAME: &str = "ToyBrowser";
 
@@ -15,11 +16,12 @@ fn main() {
     let client = http::HttpClient::new();
 
     let a = client.get("file:///home/deepankar/test.html");
-    println!("{}", a);
+    // println!("{}", a);
 
     let dom_tree = parser::html::parse(a);
 
-    let stylesheet = parser::css::parse(dom::get_css_text(dom_tree));
-    println!("{:?}", stylesheet);
+    let stylesheet = parser::css::parse(dom::get_css_text(&dom_tree));
 
+    let style_dom = style::style_tree(&dom_tree, &stylesheet);
+    println!("{}", style_dom);
 }

@@ -1,21 +1,22 @@
 use std::collections::hash_map::HashMap;
+use std::collections::hash_set::HashSet;
 use std::fmt;
 
 type AttrMap = HashMap<String, String>;
 
 pub struct Node {
     // data common to all nodes:
-    children: Vec<Node>,
+    pub children: Vec<Node>,
 
     // data specific to each node type:
-    node_type: NodeType,
+    pub node_type: NodeType,
 }
 
 impl fmt::Display for Node {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "Node({})", self.node_type)?;
+        write!(f, "Node({})", self.node_type)?;
         for child in self.children.iter() {
-            writeln!(f, "|-{}", child)?;
+            write!(f, "{}", child)?;
         }
         Ok(())
     }
@@ -37,8 +38,21 @@ impl fmt::Display for NodeType {
 
 #[derive(Debug)]
 pub struct ElementData {
-    tag_name: String,
+    pub tag_name: String,
     attributes: AttrMap,
+}
+
+impl ElementData {
+    pub fn id(&self) -> Option<&String> {
+        self.attributes.get("id")
+    }
+
+    pub fn classes(&self) -> HashSet<&str> {
+        match self.attributes.get("class") {
+            Some(class_list) => class_list.split(' ').collect(),
+            None => HashSet::new(),
+        }
+    }
 }
 
 pub fn create_text(data: String) -> Node {
@@ -58,8 +72,8 @@ pub fn create_element(name: String, attrs: AttrMap, children: Vec<Node>) -> Node
     }
 }
 
-pub fn get_css_text(dom_tree: Node) -> String {
-    let nodes = dom_tree.children;
+pub fn get_css_text(dom_tree: &Node) -> String {
+    let nodes = &dom_tree.children;
     // Find Element with style tag and get its first child
     for node in nodes.iter() {
         match &node.node_type {
