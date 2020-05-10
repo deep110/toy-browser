@@ -6,4 +6,6 @@ edition = "2018"
 
 [dependencies]
 glutin = "0.24"
+regex = "1"
+lazy_static = "1.4.0"
 reqwest = { version = "0.10", features = ["blocking"] }

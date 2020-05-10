@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate lazy_static;
+
 mod dom;
 mod errors;
 mod http;
@@ -23,5 +26,4 @@ fn main() {
     let stylesheet = parser::css::parse(dom::get_css_text(&dom_tree));
 
     let style_dom = style::style_tree(&dom_tree, &stylesheet);
-    println!("{}", style_dom);
 }

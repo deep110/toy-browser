@@ -8,6 +8,7 @@
 ///
 /// Each rule has selectors and declarations applied to it
 use super::colors;
+use super::length;
 use super::Parser;
 
 pub const COLOR_PROPERTIES: [&str; 8] = [
@@ -68,9 +69,15 @@ pub struct Declaration {
 #[derive(Debug, Clone)]
 pub enum Value {
     Keyword(String),
-    Length(f32, Unit),
+    Length(LengthValue, Unit),
     ColorValue(Color),
     // Number(f32),
+}
+
+#[derive(Debug, Clone)]
+pub enum LengthValue {
+    Single(i32),
+    All(i32, i32, i32, i32),
 }
 
 #[derive(Debug, Clone)]
@@ -103,7 +110,6 @@ impl PartialEq for Color {
         self.r == other.r && self.b == other.b && self.g == other.g && self.a == other.a
     }
 }
-
 
 pub fn parse(source: String) -> Stylesheet {
     let mut parser = Parser {
@@ -232,9 +238,14 @@ fn parse_property_value(property_name: &String, value_string: String) -> Value {
         let maybe_color = colors::parse_color(value_string.as_ref());
         match maybe_color {
             Ok(c) => return Value::ColorValue(c),
-            _ => {}, // when color value is inherit, etc.
+            _ => {} // when color value is inherit, etc.
         }
     }
+    match length::parse_length(value_string.as_ref()) {
+        Some((le, unit)) => return Value::Length(le, unit),
+        None => {}
+    }
+
     Value::Keyword(value_string)
 }
 
