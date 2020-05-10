@@ -13,6 +13,7 @@ pub fn parse_length(text: &str) -> Option<(LengthValue, Unit)> {
             (Some(num), Some(unit)) => Some((num.as_str(), unit.as_str())),
             _ => None,
         })
+        .filter(|c| !c.is_none())
         .collect();
 
     match res.len() {
